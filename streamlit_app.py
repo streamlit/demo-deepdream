@@ -9,14 +9,19 @@ import tensorflow as tf
 
 '# Deeeeeeep dreeeeeeeeeam ~_~'
 
+
+# Basic setup
+
 MODEL_DIR = 'models'
 MODEL_FILENAME = os.path.join(MODEL_DIR, 'tensorflow_inception_graph.pb')
+
 
 @st.cache
 def one_time_setup():
     if os.path.isfile(MODEL_FILENAME):
         return
     subprocess.call(['sh', 'one_time_setup.sh'])
+
 
 @st.cache(allow_output_mutation=True)
 def init_model():
@@ -25,11 +30,18 @@ def init_model():
         graph_def.ParseFromString(f.read())
     return graph_def
 
+
 one_time_setup()
 graph_def = init_model()
 
 graph = tf.Graph()
 sess = tf.compat.v1.InteractiveSession(graph=graph)
+
+
+# Below is the actual logic for this app. It's a bit messy because it's almost a
+# straight copy/paste from the original DeepDream example repo, which is also
+# messy:
+# https://github.com/tensorflow/tensorflow/tree/master/tensorflow/examples/tutorials/deepdream
 
 t_input = tf.compat.v1.placeholder(np.float32, name='input')
 imagenet_mean = 117.0
@@ -42,7 +54,7 @@ def get_tensor(layer):
     return graph.get_tensor_by_name('%s:0' % layer)
 
 
-# start with a gray image with a little noise
+# Start with a gray image with a little noise.
 img_noise = np.random.uniform(size=(224, 224, 3)) + 100.0
 
 
@@ -54,6 +66,7 @@ def write_image(dg, arr):
 
 def tffunc(*argtypes):
     '''Helper that transforms TF-graph generating function into a regular one.
+
     See "resize" function below.
     '''
     placeholders = list(map(tf.compat.v1.placeholder, argtypes))
@@ -79,8 +92,10 @@ resize = tffunc(np.float32, np.int32)(resize)
 
 def calc_grad_tiled(img, t_grad, tile_size=512):
     '''Compute the value of tensor t_grad over the image in a tiled way.
+
     Random shifts are applied to the image to blur tile boundaries over
-    multiple iterations.'''
+    multiple iterations.
+    '''
     sz = tile_size
     h, w = img.shape[:2]
     sx, sy = np.random.randint(sz, size=2)
@@ -114,7 +129,7 @@ def do_deepdream(
     text_template = 'Octave: %s\nIteration: %s'
     text_widget = st.sidebar.text(text_template % (0, 0))
     progress_widget = st.sidebar.progress(0)
-    p = 0.
+    p = 0.0
 
     # generate details octave by octave
     for octave in range(octave_n):
@@ -136,7 +151,7 @@ layers = [
     if op.type == 'Conv2D' and 'import/' in op.name
     ]
 
-# Controls:
+# Sidebar controls:
 
 filename = st.sidebar.file_uploader('Choose an image:', ('jpg', 'jpeg'))
 
@@ -156,6 +171,9 @@ octaves = st.sidebar.slider('Octaves', 1, 30, 4)
 
 iterations = st.sidebar.slider('Iterations per octave', 1, 30, 10)
 
+
+# Show original image and final image, computing DeepDream on it iteratively.
+
 max_img_width = 600
 max_img_height = 400
 
@@ -166,11 +184,14 @@ if filename:
 else:
     img0 = img_noise
 
+
 '## Original image'
+
 write_image(st, img0)
 
+
 '## Output'
+
 out = do_deepdream(
     get_tensor(layer)[:, :, :, channel], img0, octave_n=octaves,
     iter_n=iterations)
-
