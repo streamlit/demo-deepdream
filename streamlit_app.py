@@ -1,28 +1,39 @@
-# coding: utf-8
-
 import streamlit as st
 import os
 import numpy as np
 import PIL.Image
+import subprocess
 
 import tensorflow as tf
 
 
 '# Deeeeeeep dreeeeeeeeeam ~_~'
 
-model_fn = 'models/tensorflow_inception_graph.pb'
+MODEL_DIR = 'models'
+MODEL_FILENAME = os.path.join(MODEL_DIR, 'tensorflow_inception_graph.pb')
 
-# creating TensorFlow session and loading the model
+@st.cache
+def one_time_setup():
+    if os.path.isfile(MODEL_FILENAME):
+        return
+    subprocess.call(['sh', 'one_time_setup.sh'])
+
+@st.cache(allow_output_mutation=True)
+def init_model():
+    with tf.compat.v1.gfile.FastGFile(MODEL_FILENAME, 'rb') as f:
+        graph_def = tf.compat.v1.GraphDef()
+        graph_def.ParseFromString(f.read())
+    return graph_def
+
+one_time_setup()
+graph_def = init_model()
+
 graph = tf.Graph()
 sess = tf.compat.v1.InteractiveSession(graph=graph)
 
-with tf.compat.v1.gfile.FastGFile(model_fn, 'rb') as f:
-    graph_def = tf.compat.v1.GraphDef()
-    graph_def.ParseFromString(f.read())
-
 t_input = tf.compat.v1.placeholder(np.float32, name='input')
 imagenet_mean = 117.0
-t_preprocessed = tf.expand_dims(t_input-imagenet_mean, 0)
+t_preprocessed = tf.expand_dims(t_input - imagenet_mean, 0)
 tf.import_graph_def(graph_def, {'input': t_preprocessed})
 
 
@@ -125,25 +136,25 @@ layers = [
     if op.type == 'Conv2D' and 'import/' in op.name
     ]
 
+# Controls:
+
+filename = st.sidebar.file_uploader('Choose an image:', ('jpg', 'jpeg'))
+
 # Picking some internal layer. Note that we use outputs before applying the
 # ReLU nonlinearity to have non-zero gradients for features with negative
 # initial activations.
-layer_num = st.sidebar.slider('Layer to visualize', 0, len(layers) - 1, 35)
+
+max_value = len(layers) - 1
+layer_num = st.sidebar.slider('Layer to visualize', 0, max_value, min(35, max_value))
 layer = layers[layer_num]
-#'**Selected layer:** ', layer
 
 channels = int(get_tensor(layer).get_shape()[-1])
-
-channel = st.sidebar.slider('Channel to visualize', 0, channels - 1, 139)
-#'**Selected channel:** ', channel
+max_value = channels - 1
+channel = st.sidebar.slider('Channel to visualize', 0, max_value, min(139, max_value))
 
 octaves = st.sidebar.slider('Octaves', 1, 30, 4)
-#'**Selected number of octaves:**', octaves
 
 iterations = st.sidebar.slider('Iterations per octave', 1, 30, 10)
-#'**Selected number of iterations:**', iterations
-
-filename = st.sidebar.file_uploader('Choose an image:', ('jpg', 'jpeg'))
 
 max_img_width = 600
 max_img_height = 400
