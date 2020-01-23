@@ -153,7 +153,7 @@ layers = [
 
 # Sidebar controls:
 
-filename = st.sidebar.file_uploader('Choose an image:', ('jpg', 'jpeg'))
+file_obj = st.sidebar.file_uploader('Choose an image:', ('jpg', 'jpeg'))
 
 # Picking some internal layer. Note that we use outputs before applying the
 # ReLU nonlinearity to have non-zero gradients for features with negative
@@ -177,8 +177,8 @@ iterations = st.sidebar.slider('Iterations per octave', 1, 30, 10)
 max_img_width = 600
 max_img_height = 400
 
-if filename:
-    img0 = PIL.Image.open(filename)
+if file_obj:
+    img0 = PIL.Image.open(file_obj)
     img0.thumbnail((max_img_width, max_img_height), PIL.Image.ANTIALIAS)
     img0 = np.float32(img0)
 else:
@@ -186,6 +186,9 @@ else:
 
 
 '## Original image'
+
+if not file_obj:
+    "No input image provided. Using random noise."
 
 write_image(st, img0)
 
