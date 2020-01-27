@@ -1,10 +1,11 @@
-import streamlit as st
-import os
-import numpy as np
 import PIL.Image
+import numpy as np
+import os
+import requests
+import streamlit as st
 import subprocess
-
 import tensorflow as tf
+import zipfile
 
 
 '# Deeeeeeep dreeeeeeeeeam ~_~'
@@ -12,15 +13,36 @@ import tensorflow as tf
 
 # Basic setup
 
-MODEL_DIR = 'models'
+THIS_FILE_DIR = os.path.abspath(os.path.dirname(__file__))
+MODEL_DIR = os.path.join(THIS_FILE_DIR, 'models')
 MODEL_FILENAME = os.path.join(MODEL_DIR, 'tensorflow_inception_graph.pb')
 
 
 @st.cache
-def one_time_setup():
+def download_model_from_web():
     if os.path.isfile(MODEL_FILENAME):
         return
-    subprocess.call(['sh', 'one_time_setup.sh'])
+
+    try:
+        os.mkdir(MODEL_DIR)
+    except FileExistsError:
+        pass
+
+    MODEL_ZIP_URL = (
+        'https://storage.googleapis.com/download.tensorflow.org/models/'
+        'inception5h.zip')
+    ZIP_FILE_NAME = 'inception5h.zip'
+    ZIP_FILE_PATH = os.path.join(MODEL_DIR, ZIP_FILE_NAME)
+    resp = requests.get(MODEL_ZIP_URL, stream=True)
+
+    with open(ZIP_FILE_PATH, 'wb') as file_desc:
+        for chunk in resp.iter_content(chunk_size=5000000):
+            file_desc.write(chunk)
+
+    zip_file = zipfile.ZipFile(ZIP_FILE_PATH)
+    zip_file.extractall(path=MODEL_DIR)
+
+    os.remove(ZIP_FILE_PATH)
 
 
 @st.cache(allow_output_mutation=True)
@@ -31,7 +53,7 @@ def init_model():
     return graph_def
 
 
-one_time_setup()
+download_model_from_web()
 graph_def = init_model()
 
 graph = tf.Graph()
