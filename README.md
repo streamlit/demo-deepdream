@@ -1,25 +1,22 @@
-# Streamlit Deep Dream example
+# Streamlit Demo: Deep Dream
 
-Adapted from https://github.com/tensorflow/tensorflow/tree/master/tensorflow/examples/tutorials/deepdream
+A [Streamlit](https://streamlit.io) demo demonstrating the Deep Dream technique.
+Adapted from the [TensorFlow Deep Dream
+tutorial](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/examples/tutorials/deepdream)
 
 
-## Setup
-
-Just run make:
+## How to run this demo
 
 ```
-make all
+pip install --upgrade streamlit tensorflow
+streamlit run https://raw.githubusercontent.com/tvst/deepdream/master/streamlit_app.py
 ```
 
-
-## Usage
-
-Run a Streamlit-ized version of the [original Jupyter notebook](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/examples/tutorials/deepdream/deepdream.ipynb).
+...or clone this repo and then run with:
 ```
-streamlit run converted_notebook.py
+streamlit run streamlit_app.py
 ```
 
-or run an interactive Streamlit app:
-```
-streamlit run main.py
-```
+### Questions? Comments?
+
+Please ask in the [Streamlit community](https://discuss.streamlit.io).
