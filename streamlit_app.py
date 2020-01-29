@@ -209,8 +209,9 @@ else:
 
 '## Original image'
 
+info_msg = st.empty()
 if not file_obj:
-    "No input image provided. Using random noise."
+    info_msg.text("No input image provided. Using random noise.")
 
 write_image(st, img0)
 
