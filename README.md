@@ -8,7 +8,7 @@ tutorial](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/exampl
 ## How to run this demo
 
 ```
-pip install --upgrade streamlit tensorflow
+pip install -r requirements.txt
 streamlit run https://raw.githubusercontent.com/tvst/deepdream/master/streamlit_app.py
 ```
 
