@@ -175,6 +175,9 @@ layers = [
 
 # Sidebar controls:
 
+# Temporary config option to remove deprecation warning.
+st.set_option('deprecation.showfileUploaderEncoding', False)
+
 file_obj = st.sidebar.file_uploader('Choose an image:', ('jpg', 'jpeg'))
 
 # Picking some internal layer. Note that we use outputs before applying the
