@@ -1,2 +1,2 @@
-tensorflow>=2.2.0rc3
-streamlit>=0.53.0
+tensorflow==2.2.0
+streamlit==0.64.0
