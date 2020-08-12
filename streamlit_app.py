@@ -1,3 +1,4 @@
+from io import BytesIO
 import PIL.Image
 import numpy as np
 import os
@@ -5,8 +6,8 @@ import requests
 import streamlit as st
 import subprocess
 import tensorflow as tf
+import urllib
 import zipfile
-
 
 '# Deeeeeeep dreeeeeeeeeam ~_~'
 
@@ -132,19 +133,18 @@ def calc_grad_tiled(img, t_grad, tile_size=512):
 
 
 def do_deepdream(
-        t_obj, img0=img_noise, iter_n=10, step=1.5, octave_n=4,
+        t_obj, img_in=img_noise, iter_n=10, step=1.5, octave_n=4,
         octave_scale=1.4):
     t_score = tf.reduce_mean(t_obj)
     t_grad = tf.gradients(t_score, t_input)[0]
 
     # split the image into a number of octaves
-    img = img0
     octaves = []
     for i in range(octave_n-1):
-        hw = img.shape[:2]
-        lo = resize(img, np.int32(np.float32(hw)/octave_scale))
-        hi = img-resize(lo, hw)
-        img = lo
+        hw = img_in.shape[:2]
+        lo = resize(img_in, np.int32(np.float32(hw)/octave_scale))
+        hi = img_in-resize(lo, hw)
+        img_in = lo
         octaves.append(hi)
 
     image_widget = st.empty()
@@ -157,14 +157,14 @@ def do_deepdream(
     for octave in range(octave_n):
         if octave > 0:
             hi = octaves[-octave]
-            img = resize(img, hi.shape[:2])+hi
+            img_in = resize(img_in, hi.shape[:2])+hi
         for i in range(iter_n):
-            g = calc_grad_tiled(img, t_grad)
-            img += g*(step / (np.abs(g).mean()+1e-7))
+            g = calc_grad_tiled(img_in, t_grad)
+            img_in += g*(step / (np.abs(g).mean()+1e-7))
             p += 1
             progress_widget.progress(p / (octave_n * iter_n))
 
-            write_image(image_widget, img)
+            write_image(image_widget, img_in)
             text_widget.text(text_template % (octave, i))
 
 
@@ -173,24 +173,44 @@ layers = [
     if op.type == 'Conv2D' and 'import/' in op.name
     ]
 
+
+@st.cache()
+def read_file_from_url(url):
+    return urllib.request.urlopen(url).read()
+
+
 # Sidebar controls:
 
 # Temporary config option to remove deprecation warning.
 st.set_option('deprecation.showfileUploaderEncoding', False)
 
+MAX_IMG_WIDTH = 600
+MAX_IMG_HEIGHT = 400
+DEFAULT_IMAGE_URL = 'https://i.imgur.com/dOPMzXl.jpg'
+
+
 file_obj = st.sidebar.file_uploader('Choose an image:', ('jpg', 'jpeg'))
+
+if not file_obj:
+    file_obj = BytesIO(read_file_from_url(DEFAULT_IMAGE_URL))
+
+img_in = PIL.Image.open(file_obj)
+
+img_in.thumbnail((MAX_IMG_WIDTH, MAX_IMG_HEIGHT), PIL.Image.ANTIALIAS)
+img_in = np.float32(img_in)
+
 
 # Picking some internal layer. Note that we use outputs before applying the
 # ReLU nonlinearity to have non-zero gradients for features with negative
 # initial activations.
 
 max_value = len(layers) - 1
-layer_num = st.sidebar.slider('Layer to visualize', 0, max_value, min(35, max_value))
+layer_num = st.sidebar.slider('Layer to visualize', 0, max_value, min(58, max_value))
 layer = layers[layer_num]
 
 channels = int(get_tensor(layer).get_shape()[-1])
 max_value = channels - 1
-channel = st.sidebar.slider('Channel to visualize', 0, max_value, min(139, max_value))
+channel = st.sidebar.slider('Channel to visualize', 0, max_value, min(62, max_value))
 
 octaves = st.sidebar.slider('Octaves', 1, 30, 4)
 
@@ -199,27 +219,13 @@ iterations = st.sidebar.slider('Iterations per octave', 1, 30, 10)
 
 # Show original image and final image, computing DeepDream on it iteratively.
 
-max_img_width = 600
-max_img_height = 400
-
-if file_obj:
-    img0 = PIL.Image.open(file_obj)
-    img0.thumbnail((max_img_width, max_img_height), PIL.Image.ANTIALIAS)
-    img0 = np.float32(img0)
-else:
-    img0 = img_noise
-
-
 '## Original image'
 
-if file_obj:
-    write_image(st, img0)
-else:
-    st.info("No input image provided. Using random noise.")
+write_image(st, img_in)
 
 
 '## Output'
 
 out = do_deepdream(
-    get_tensor(layer)[:, :, :, channel], img0, octave_n=octaves,
+    get_tensor(layer)[:, :, :, channel], img_in, octave_n=octaves,
     iter_n=iterations)
