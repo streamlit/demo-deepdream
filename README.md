@@ -4,6 +4,9 @@ A [Streamlit](https://streamlit.io) demo demonstrating the Deep Dream technique.
 Adapted from the [TensorFlow Deep Dream
 tutorial](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/examples/tutorials/deepdream)
 
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/streamlit/demo-deepdream)
+
+
 
 ## How to run this demo
 
