@@ -189,7 +189,7 @@ if image_source == "Specify image by URL...":
 elif image_source == "Upload image from my machine...":
     uploaded_file = st.sidebar.file_uploader(
         "Upload your own image...",
-        type="jpg",
+        type=["jpg", "png"],
         help="Upload an image from your computer to use as a starting point for Deep Dream.\n\nUses the same image as the 'Yellow labrador example' if no image is uploaded.",
     )
     if uploaded_file is not None:
