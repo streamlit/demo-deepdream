@@ -159,17 +159,47 @@ st.sidebar.caption(
 [TensorFlow's DeepDream tutorial](https://github.com/tensorflow/docs/blob/9ae740ab7b5b3f9c32ca060332037b51d95674ae/site/en/tutorials/generative/deepdream.ipynb)."""
 )
 
-url = st.sidebar.text_input(
-    "Image URL",
-    "https://storage.googleapis.com/download.tensorflow.org/example_images/YellowLabradorLooking_new.jpg",
-    help="The URL of the image to use as a starting point for Deep Dream.",
+# Define a dictionary for image sources
+image_sources = {
+    "Specify image by URL...": None,
+    "Upload image from my machine...": None,
+    "Grace Hopper example": "https://storage.googleapis.com/download.tensorflow.org/example_images/grace_hopper.jpg",
+    "Red sunflower example": "https://storage.googleapis.com/download.tensorflow.org/example_images/592px-Red_sunflower.jpg",
+    "Yellow labrador example": "https://storage.googleapis.com/download.tensorflow.org/example_images/YellowLabradorLooking_new.jpg",
+}
+
+image_source = st.sidebar.selectbox(
+    "Input image",
+    list(image_sources.keys()),
+    help="""
+    Select an image to use as a starting point for Deep Dream.\n
+    Either enter a URL to an image on the web, upload an image
+    from your computer, or select one of the example images.""",
 )
 
-uploaded_file = st.sidebar.file_uploader(
-    "Upload your own image...",
-    type="jpg",
-    help="Upload an image from your computer to use as a starting point for Deep Dream.",
-)
+if image_source == "Specify image by URL...":
+    url = st.sidebar.text_input(
+        "Image URL",
+        image_sources["Yellow labrador example"],
+        help="The URL of the image to use as a starting point for Deep Dream.",
+    )
+    original_img = download(url, max_dim=500)
+
+elif image_source == "Upload image from my machine...":
+    uploaded_file = st.sidebar.file_uploader(
+        "Upload your own image...",
+        type="jpg",
+        help="Upload an image from your computer to use as a starting point for Deep Dream.\n\nUses the same image as the 'Yellow labrador example' if no image is uploaded.",
+    )
+    if uploaded_file is not None:
+        original_img = PIL.Image.open(uploaded_file)
+        original_img.thumbnail((500, 500))
+        original_img = np.array(original_img.copy())
+    else:
+        original_img = download(image_sources["Yellow labrador example"], max_dim=500)
+
+else:
+    original_img = download(image_sources[image_source], max_dim=500)
 
 octaves = st.sidebar.slider(
     "Octaves",
@@ -213,13 +243,6 @@ names = st.sidebar.multiselect(
 layers = [all_layers[name] for name in names]
 dream_model = load_dream_model(base_model, layers)
 get_tiled_gradients = TiledGradients(dream_model)
-
-if uploaded_file is not None:
-    original_img = PIL.Image.open(uploaded_file)
-    original_img.thumbnail((500, 500))
-    original_img = np.array(original_img.copy())
-else:
-    original_img = download(url, max_dim=500)
 
 st.subheader("Original Image")
 st.image(original_img, use_column_width=True)
