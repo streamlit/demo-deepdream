@@ -7,8 +7,9 @@ import tensorflow as tf
 
 "# Deep Dream :sleeping:"
 
-# Download an image and read it into a NumPy array.
+
 def download(url, max_dim=None):
+    """Download an image from a URL and read it into a NumPy array."""
     name = url.split("/")[-1]
     image_path = tf.keras.utils.get_file(name, origin=url)
     img = PIL.Image.open(image_path)
@@ -17,14 +18,14 @@ def download(url, max_dim=None):
     return np.array(img)
 
 
-# Normalize an image
 def deprocess(img):
+    """Normalize an image"""
     img = 255 * (img + 1.0) / 2.0
     return tf.cast(img, tf.uint8)
 
 
-# Convert an image to a byte array so users can download it
 def img_to_bytes(img):
+    """Convert a PIL image to a byte array so users can download it"""
     with BytesIO() as buf:
         result.save(buf, format="PNG")
         img_bytes = buf.getvalue()
@@ -32,7 +33,7 @@ def img_to_bytes(img):
 
 
 def random_roll(img, maxroll):
-    # Randomly shift the image to avoid tiled boundaries.
+    """Randomly shift the image to avoid tiled boundaries."""
     shift = tf.random.uniform(
         shape=[2], minval=-maxroll, maxval=maxroll, dtype=tf.int32
     )
@@ -54,8 +55,8 @@ def load_dream_model(base_model, layers):
     return tf.keras.Model(inputs=base_model.input, outputs=layers)
 
 
-# Display an image
 def show(dg, img):
+    """Display an image."""
     dg.image(PIL.Image.fromarray(np.array(img)), use_column_width=True)
     return dg
 
@@ -67,7 +68,7 @@ def show(dg, img):
 
 
 def calc_loss(img, model):
-    # Pass forward the image through the model to retrieve the activations.
+    """Pass forward the image through the model to retrieve the activations."""
     img_batch = tf.expand_dims(img, axis=0)
     layer_activations = model(img_batch)
     if len(layer_activations) == 1:
