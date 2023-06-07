@@ -159,58 +159,55 @@ st.sidebar.caption(
 [TensorFlow's DeepDream tutorial](https://github.com/tensorflow/docs/blob/9ae740ab7b5b3f9c32ca060332037b51d95674ae/site/en/tutorials/generative/deepdream.ipynb)."""
 )
 
-with st.sidebar.form(key="my_form"):
-    url = st.text_input(
-        "Image URL",
-        "https://storage.googleapis.com/download.tensorflow.org/example_images/YellowLabradorLooking_new.jpg",
-        help="The URL of the image to use as a starting point for Deep Dream.",
-    )
+url = st.sidebar.text_input(
+    "Image URL",
+    "https://storage.googleapis.com/download.tensorflow.org/example_images/YellowLabradorLooking_new.jpg",
+    help="The URL of the image to use as a starting point for Deep Dream.",
+)
 
-    uploaded_file = st.file_uploader(
-        "Upload your own image...",
-        type="jpg",
-        help="Upload an image from your computer to use as a starting point for Deep Dream.",
-    )
+uploaded_file = st.sidebar.file_uploader(
+    "Upload your own image...",
+    type="jpg",
+    help="Upload an image from your computer to use as a starting point for Deep Dream.",
+)
 
-    octaves = st.slider(
-        "Octaves",
-        min_value=-2,
-        max_value=3,
-        value=(-1, 0),
-        step=1,
-        help="The number of scales at which to run gradient ascent.",
-    )
-    steps_per_octave = st.slider(
-        "Steps per Octave",
-        min_value=10,
-        max_value=100,
-        value=50,
-        step=10,
-        help="The number of gradient ascent steps to run at each octave.",
-    )
-    step_size = st.slider(
-        "Step Size",
-        min_value=0.01,
-        max_value=0.1,
-        value=0.01,
-        step=0.01,
-        help="The step size for gradient ascent.",
-    )
+octaves = st.sidebar.slider(
+    "Octaves",
+    min_value=-2,
+    max_value=3,
+    value=(-1, 0),
+    step=1,
+    help="The number of scales at which to run gradient ascent.",
+)
+steps_per_octave = st.sidebar.slider(
+    "Steps per Octave",
+    min_value=10,
+    max_value=100,
+    value=50,
+    step=10,
+    help="The number of gradient ascent steps to run at each octave.",
+)
+step_size = st.sidebar.slider(
+    "Step Size",
+    min_value=0.01,
+    max_value=0.1,
+    value=0.01,
+    step=0.01,
+    help="The step size for gradient ascent.",
+)
 
-    names = st.multiselect(
-        "Select layers to visualize",
-        list(all_layers.keys()),
-        default=["mixed3", "mixed5"],
-        help="""
-        For DeepDream, the layers of interest are those where the convolutions are concatenated. 
-        There are 11 of these layers in InceptionV3, named 'mixed0' though 'mixed10'. \n\n
-        Using different layers will result in different dream-like images. Deeper layers respond 
-        to higher-level features (such as eyes and faces), while earlier layers respond to simpler 
-        features (such as edges, shapes, and textures).
-        Source: [TensorFlow DeepDream](https://www.tensorflow.org/tutorials/generative/deepdream?hl=en#prepare_the_feature_extraction_model)""",
-    )
-
-    btn = st.form_submit_button(label="Start dreaming... :sleeping: :magic_wand:")
+names = st.sidebar.multiselect(
+    "Select layers to visualize",
+    list(all_layers.keys()),
+    default=["mixed3", "mixed5"],
+    help="""
+    For DeepDream, the layers of interest are those where the convolutions are concatenated. 
+    There are 11 of these layers in InceptionV3, named 'mixed0' though 'mixed10'. \n\n
+    Using different layers will result in different dream-like images. Deeper layers respond 
+    to higher-level features (such as eyes and faces), while earlier layers respond to simpler 
+    features (such as edges, shapes, and textures).
+    Source: [TensorFlow DeepDream](https://www.tensorflow.org/tutorials/generative/deepdream?hl=en#prepare_the_feature_extraction_model)""",
+)
 
 # Retrieve specific user-chosen layers from multiselect
 layers = [all_layers[name] for name in names]
@@ -227,22 +224,20 @@ else:
 st.subheader("Original Image")
 st.image(original_img, use_column_width=True)
 
-if btn:
-    st.subheader("Deep Dream Image")
-    image_widget = st.empty()
-    result = run_deep_dream_with_octaves(
-        img=original_img,
-        steps_per_octave=steps_per_octave,
-        step_size=step_size,
-        octaves=octaves,
-    )
-    st.balloons()
+st.subheader("Deep Dream Image")
+image_widget = st.empty()
+result = run_deep_dream_with_octaves(
+    img=original_img,
+    steps_per_octave=steps_per_octave,
+    step_size=step_size,
+    octaves=octaves,
+)
 
-    img_bytes = img_to_bytes(result)
+img_bytes = img_to_bytes(result)
 
-    st.download_button(
-        label="Download Deep Dream Image",
-        data=img_bytes,
-        file_name="deep_dream.png",
-        mime="image/png",
-    )
+st.download_button(
+    label="Download Deep Dream Image",
+    data=img_bytes,
+    file_name="deep_dream.png",
+    mime="image/png",
+)
