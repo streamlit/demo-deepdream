@@ -12,7 +12,7 @@ tutorial](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/exampl
 
 ```
 pip install -r requirements.txt
-streamlit run https://raw.githubusercontent.com/tvst/deepdream/master/streamlit_app.py
+streamlit run https://raw.githubusercontent.com/streamlit/demo-deepdream/master/streamlit_app.py
 ```
 
 ...or clone this repo and then run with:
